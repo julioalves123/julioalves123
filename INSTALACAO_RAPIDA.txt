@@ -1,0 +1,73 @@
+================================================================================
+ VegetaSat - INSTALAÇÃO RÁPIDA NO SEU COMPUTADOR (3 PASSOS)
+================================================================================
+
+SISTEMA: Análise de Vegetação Nativa via Sentinel-2
+O QUE FAZ: Você envia KML do perímetro → sistema detecta vegetação nativa
+          → gera KML + PDF laudo + mapa
+
+--------------------------------------------------------------------------------
+ WINDOWS (MAIS FÁCIL):
+--------------------------------------------------------------------------------
+1. Instale Python: https://www.python.org/downloads/
+   - Na instalação MARQUE: "Add Python to PATH"
+2. Baixe este projeto (ZIP) e extraia
+3. Duplo clique em: start.bat
+4. Aguarde 2-3 minutos (primeira vez instala tudo)
+5. Abra navegador em: http://localhost:8000
+
+PRONTO! Arraste seu KML e clique em Processar.
+
+--------------------------------------------------------------------------------
+ LINUX / MAC:
+--------------------------------------------------------------------------------
+1. Abra terminal na pasta do projeto
+2. Execute:
+   chmod +x start.sh
+   ./start.sh
+3. Abra: http://localhost:8000
+
+--------------------------------------------------------------------------------
+ MANUAL (se os scripts não funcionarem):
+--------------------------------------------------------------------------------
+1. python -m venv venv
+   Windows: venv\Scripts\activate
+   Linux/Mac: source venv/bin/activate
+
+2. pip install -r requirements.txt
+   (Linux: pip install --break-system-packages -r requirements.txt)
+
+3. python run.py
+
+4. Abra http://localhost:8000
+
+--------------------------------------------------------------------------------
+ DOCKER (alternativa):
+--------------------------------------------------------------------------------
+docker-compose up --build
+Acesse http://localhost:8000
+
+--------------------------------------------------------------------------------
+ COMO USAR:
+--------------------------------------------------------------------------------
+- Tela inicial: arraste arquivo .KML (perímetro da fazenda/área)
+- Não tem KML? Clique em "Use um exemplo de fazenda"
+- Clique em "Processar Imagem Sentinel-2"
+- Veja no mapa: perímetro vermelho + vegetação verde (suavizada)
+- Baixe: KML Vegetação e Laudo PDF
+
+Exemplo KML incluso: sample_data/fazenda_exemplo.kml
+
+Arquivos gerados ficam em: data/jobs/{id}/
+
+--------------------------------------------------------------------------------
+ PROBLEMAS?
+--------------------------------------------------------------------------------
+- Porta 8000 em uso: feche outro programa ou use --port 8001
+- Python não encontrado: reinstale marcando "Add to PATH"
+- Antivírus bloqueando: libere Python
+- Mapa não carrega: precisa internet para mapa base, mas análise funciona offline
+
+Mais detalhes: veja LOCAL_SETUP.md
+
+================================================================================

@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  vegetasat:
+    build: .
+    container_name: vegetasat
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/jobs:/app/data/jobs
+      - ./sample_data:/app/sample_data
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1

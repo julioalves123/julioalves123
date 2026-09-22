@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Vegetação Nativa - Sentinel-2</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">🌿</div>
+                    <div class="logo-text">
+                        <h1>VegetaSat</h1>
+                        <span>Análise de Vegetação Nativa via Sentinel-2</span>
+                    </div>
+                </div>
+                <div class="header-badges">
+                    <span class="badge badge-sentinel">Sentinel-2 L2A 10m</span>
+                    <span class="badge badge-ndvi">V2 Alta Precisão</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Step Indicator -->
+            <div class="steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Enviar KML</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Processar</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Visualizar</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Baixar</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- Left Panel: Controls -->
+                <div class="panel left-panel">
+                    <!-- Upload Section -->
+                    <section class="card" id="upload-section">
+                        <div class="card-header">
+                            <h2>📁 Perímetro da Área</h2>
+                            <p>Envie o arquivo .KML contendo o polígono do perímetro</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-zone" id="upload-zone">
+                                <div class="upload-icon">📤</div>
+                                <h3>Arraste o KML aqui ou clique para selecionar</h3>
+                                <p>Formatos aceitos: .kml (Google Earth, QGIS, etc)</p>
+                                <input type="file" id="kml-input" accept=".kml" hidden>
+                                <button class="btn btn-secondary" id="browse-btn">Selecionar Arquivo</button>
+                            </div>
+
+                            <div class="sample-kml">
+                                <p>Não tem um KML? <a href="#" id="load-sample">Use um exemplo de fazenda</a></p>
+                            </div>
+
+                            <div class="file-info hidden" id="file-info">
+                                <div class="file-icon">🗺️</div>
+                                <div class="file-details">
+                                    <span class="file-name" id="file-name"></span>
+                                    <span class="file-size" id="file-size"></span>
+                                </div>
+                                <button class="btn-icon" id="remove-file">✕</button>
+                            </div>
+
+                            <div class="perimeter-stats hidden" id="perimeter-stats">
+                                <h4>Perímetro Identificado</h4>
+                                <div class="stats-grid">
+                                    <div class="stat">
+                                        <span class="stat-label">Área Total</span>
+                                        <span class="stat-value" id="stat-area">-</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-label">Centroide</span>
+                                        <span class="stat-value small" id="stat-centroid">-</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-label">Polígonos</span>
+                                        <span class="stat-value" id="stat-polys">-</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-label">BBox</span>
+                                        <span class="stat-value small" id="stat-bbox">-</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary btn-block hidden" id="process-btn">
+                                <span class="btn-icon">🛰️</span>
+                                Processar Imagem Sentinel-2
+                            </button>
+
+                            <div class="processing-status hidden" id="processing-status">
+                                <div class="spinner"></div>
+                                <div class="status-text">
+                                    <h4 id="status-title">Processando...</h4>
+                                    <p id="status-desc">Buscando imagem Sentinel-2 mais recente</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Results Section -->
+                    <section class="card hidden" id="results-section">
+                        <div class="card-header">
+                            <h2>🌱 Vegetação Detectada - V2 Alta Precisão</h2>
+                            <p>NDVI + SAVI + Hysteresis + Filtro Forma + Gradiente RGB</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="result-highlight">
+                                <div class="highlight-item">
+                                    <span class="highlight-value" id="result-perc">0%</span>
+                                    <span class="highlight-label">Cobertura Vegetal</span>
+                                </div>
+                                <div class="highlight-item">
+                                    <span class="highlight-value" id="result-area">0 ha</span>
+                                    <span class="highlight-label">Área Vegetação</span>
+                                </div>
+                                <div class="highlight-item">
+                                    <span class="highlight-value" id="result-frags">0</span>
+                                    <span class="highlight-label">Fragmentos</span>
+                                </div>
+                            </div>
+
+                            <div class="metadata-table">
+                                <h4>Metadados da Imagem</h4>
+                                <table>
+                                    <tr><td>Data</td><td id="meta-date">-</td></tr>
+                                    <tr><td>Fonte</td><td id="meta-source">Sentinel-2 L2A</td></tr>
+                                    <tr><td>Resolução</td><td id="meta-res">10m</td></tr>
+                                    <tr><td>Nuvens</td><td id="meta-cloud">-</td></tr>
+                                    <tr><td>NDVI Otsu</td><td id="meta-thresh">-</td></tr>
+                                    <tr><td>Hysteresis Low/High</td><td id="meta-hyst">-</td></tr>
+                                    <tr><td>SAVI médio veg</td><td id="meta-savi">-</td></tr>
+                                    <tr><td>Separação NDVI</td><td id="meta-sep">-</td></tr>
+                                    <tr><td>Confiança</td><td><span class="confidence-badge" id="meta-conf">-</span></td></tr>
+                                </table>
+                            </div>
+
+                            <div class="methodology">
+                                <h4>Metodologia V2 - Melhorias de Precisão</h4>
+                                <ul>
+                                    <li><strong>Índices:</strong> NDVI = (B08-B04)/(B08+B04) + SAVI (L=0.5) reduz solo + NDWI água</li>
+                                    <li><strong>Filtragem:</strong> Bilateral preserva bordas (win=7, sigma_color=0.1)</li>
+                                    <li><strong>Hysteresis:</strong> Semente high Otsu*1.15 + crescimento low Otsu*0.85 via reconstrução morfológica</li>
+                                    <li><strong>Morfologia:</strong> Reconstrução + filtro forma (solidity>0.25, eccentricity<0.995, compactness>0.02)</li>
+                                    <li><strong>Gradiente RGB:</strong> Sobel, borda vegetação ajustada para seguir bordas reais, <25% mudança área</li>
+                                    <li><strong>Vetorização:</strong> Marching squares sub-pixel + Chaikin 2 iterações + simplify 0.25m + buffer round 1m</li>
+                                    <li><strong>Anti-quadriculado:</strong> Suavização vetorial + snapping a gradientes reais</li>
+                                </ul>
+                            </div>
+
+                            <div class="download-actions">
+                                <button class="btn btn-primary" id="download-kml">
+                                    <span>📥</span> Baixar KML Vegetação
+                                </button>
+                                <button class="btn btn-secondary" id="download-pdf">
+                                    <span>📄</span> Baixar Laudo PDF
+                                </button>
+                            </div>
+
+                            <div class="image-preview">
+                                <h4>Prévias</h4>
+                                <div class="preview-grid">
+                                    <div class="preview-item">
+                                        <img id="preview-rgb" src="" alt="RGB">
+                                        <span>RGB Sentinel-2</span>
+                                    </div>
+                                    <div class="preview-item">
+                                        <img id="preview-ndvi" src="" alt="NDVI">
+                                        <span>NDVI</span>
+                                    </div>
+                                    <div class="preview-item">
+                                        <img id="preview-overlay" src="" alt="Overlay">
+                                        <span>Vegetação + RGB</span>
+                                    </div>
+                                    <div class="preview-item">
+                                        <img id="preview-final" src="" alt="Mapa Final">
+                                        <span>Mapa Final</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Info Card -->
+                    <section class="card info-card">
+                        <div class="card-header">
+                            <h2>ℹ️ Como funciona? V2 Alta Precisão</h2>
+                        </div>
+                        <div class="card-body">
+                            <ol class="info-steps">
+                                <li><strong>KML:</strong> Parser XML robusto, Polygon/MultiPolygon/holes, área Web Mercator</li>
+                                <li><strong>Sentinel-2 V2:</strong> Produção busca L2A real <10% nuvens via Copernicus STAC. Demo offline V2 ultra-realista: fractal multi-oitavas, domain warping, vegetação orgânica thresholded (não círculos), clareiras, rios, 3 tipos solo, sombreamento topográfico.</li>
+                                <li><strong>NDVI+SAVI:</strong> NDVI filtrado bilateral preserva bordas + SAVI L=0.5 reduz solo + NDWI água. Hysteresis high= Otsu*1.15 semente, low= Otsu*0.85 crescimento via reconstrução morfológica.</li>
+                                <li><strong>Precisão:</strong> Morfologia reconstrução + filtro forma (solidity, eccentricity, compactness) remove estradas/cercas/ruído + refinamento gradiente RGB Sobel (<25% mudança área) para bordas seguirem limites reais visíveis.</li>
+                                <li><strong>Vetorização V2:</strong> Marching squares sub-pixel, Chaikin 2 iterações, simplify 0.25m, buffer round 1m, make_valid, unary_union. Elimina quadriculado e preserva fidelidade aos limites reais.</li>
+                                <li><strong>Saídas:</strong> KML vegetação + PDF laudo V2 com metodologia detalhada, áreas, confiança, mapas RGB/NDVI/overlay/final.</li>
+                            </ol>
+                            <div class="tech-stack">
+                                <span class="tech">Sentinel-2 L2A</span>
+                                <span class="tech">NDVI+SAVI</span>
+                                <span class="tech">Hysteresis</span>
+                                <span class="tech">Bilateral</span>
+                                <span class="tech">Gradiente RGB</span>
+                                <span class="tech">Chaikin</span>
+                                <span class="tech">V2 Precisão</span>
+                            </div>
+                            <div style="margin-top:12px; padding:10px; background:#f0f7f0; border-radius:6px; font-size:0.8em;">
+                                <strong>🔧 Ajustes de precisão V2:</strong> Sistema agora evita falsos positivos de solo exposto, cultura, água e estradas via SAVI + filtro forma + gradiente RGB. Se ainda houver divergência, valide campo e ajuste: para produção use imagem real Sentinel-2 (não simulação) e considere série temporal + CBERS/Planet 2-3m.
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Panel: Map -->
+                <div class="panel right-panel">
+                    <div class="card map-card">
+                        <div class="card-header map-header">
+                            <h2>🗺️ Mapa Interativo</h2>
+                            <div class="map-controls">
+                                <button class="btn btn-small" id="fit-bounds">Ajustar Vista</button>
+                                <div class="layer-toggle">
+                                    <label><input type="checkbox" id="toggle-perimeter" checked> Perímetro</label>
+                                    <label><input type="checkbox" id="toggle-vegetation" checked> Vegetação</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body map-body">
+                            <div id="map"></div>
+                            <div class="map-legend">
+                                <div class="legend-item"><span class="legend-color" style="background: #ff0000;"></span> Perímetro Original</div>
+                                <div class="legend-item"><span class="legend-color" style="background: #228B22;"></span> Vegetação Nativa (suavizada)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>📊 Detalhes Técnicos</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="log" id="processing-log">
+                                <div class="log-entry">Sistema pronto. Envie um KML para iniciar.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>VegetaSat v1.0 • Sentinel-2 L2A (10m) • NDVI + Segmentação + Vetorização Suavizada • Prioriza fidelidade aos limites reais da vegetação</p>
+            <p class="footer-note">Em produção: integração Copernicus Data Space Ecosystem & Microsoft Planetary Computer STAC API. Demo offline usa simulação realista mantendo metodologia completa.</p>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/app.js"></script>
+</body>
+</html>

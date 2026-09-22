@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+    <name>Fazenda Exemplo - Perímetro</name>
+    <description>Exemplo de perímetro para teste do sistema de detecção de vegetação nativa via Sentinel-2</description>
+    <Placemark>
+        <name>Perímetro da Fazenda - Brasília DF</name>
+        <description>Área de 5.6 km² aproximadamente - Região de Cerrado</description>
+        <Polygon>
+            <outerBoundaryIs>
+                <LinearRing>
+                    <coordinates>
+                        -47.9500,-15.8000,0
+                        -47.9000,-15.8000,0
+                        -47.9000,-15.7500,0
+                        -47.9200,-15.7400,0
+                        -47.9500,-15.7600,0
+                        -47.9500,-15.8000,0
+                    </coordinates>
+                </LinearRing>
+            </outerBoundaryIs>
+        </Polygon>
+    </Placemark>
+</Document>
+</kml>
